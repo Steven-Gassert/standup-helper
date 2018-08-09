@@ -1,4 +1,4 @@
-const GITHUB_TOKEN = 'cccb43f21086325fcb653cb8ed0c69962a0d7c9e';
+const GITHUB_TOKEN = '621c0c44e841de6ccf92158107d1dc3b933199ea';
 const GITHUB_URL = 'https://api.github.com';
 
 
@@ -23,7 +23,6 @@ octokit.authenticate({
  * Add another param here for a json object which can indicate specifically which event types you would like (issues, prs, commits). Set to 'any' if left empty
  */
 function getEvents(params, callback) {
-
   const events = [];
   const username = 'lpatino10';
   const per_page = 100;
@@ -51,7 +50,7 @@ function getEvents(params, callback) {
 
   let time_frame_calculated;
   
-  // change to be either a day or week ago
+
   if (time_frame === 'week') {
     time_frame_calculated = Date.parse(new Date(new Date().getTime() - (60*60*24*7*1000)));
     console.log(`The date a week ago was ${time_frame_calculated}`);
@@ -69,18 +68,22 @@ function getEvents(params, callback) {
     // process events
     let keepSearching = true;
     let correct_event_type = false;
+    let message = null;
     data
       .filter(event => event.created_at) // not sure we need this filter
       .forEach(event => {
         const createdAt = Date.parse(event.created_at);
         if (createdAt >= time_frame_calculated) {
-          correct_event_type = correctTypeOfEvent(event_types, event);
+          correct_event_type, message = correctTypeOfEvent(event_types, event);
           if (correct_event_type) {
+            console.log(`we want to add ${event} to our return json with message: ${message
+            }`);
             // check to see if correct repo type,
           }
+          // pseudo code for this section
           // if it is the correct type of event
           //    if it is contained within the correct repo
-          //      call addevent, pass it our return json
+          //      call addevent, pass it the event and our return json
           //    else next
           // else next
           events.push(event); // gets deleted when pseudo code implemented
@@ -118,8 +121,8 @@ function correctTypeOfEvent(event_types,event) {
   switch (event.type) {
     // Pull request parsing
     case ('PullRequestEvent'):
-    console.log("in pr switch");
-    // determine if we want to include this type of pull request event
+      console.log("in pr switch block");
+      // determine if we want to include this type of pull request event
       switch (event.payload.action) {
         case ('opened'):
           return true, 'Pull request opened';
