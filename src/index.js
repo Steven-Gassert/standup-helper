@@ -1,4 +1,5 @@
-const GITHUB_TOKEN = '621c0c44e841de6ccf92158107d1dc3b933199ea';
+// const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = '109ff1ad8c86c2175070cd32916b229f6d5d21f4';
 const GITHUB_URL = 'https://api.github.com';
 
 
@@ -18,18 +19,13 @@ octokit.authenticate({
  * @param {string} url - The Github URL
  * @param {string} token - The Github token
  * @param {function} callback - The callback
- * @param {string} repo - name of repository you would like to collect stats about, set to 'all' if left empty
  * @param {string} time_frame - length of time you would like to collect stats about, set to day if left empty
- * Add another param here for a json object which can indicate specifically which event types you would like (issues, prs, commits). Set to 'any' if left empty
  */
 function getEvents(params, callback) {
   const events = [];
   const username = 'lpatino10';
   const per_page = 100;
-  const repo = 'any'; // can add later? don't think we need to do this filtering, will we really have too many repos to look through?
-  const event_types = 'all'; // can add later? don't think we need to do this filtering since we'll only have 3 event types by default
   const time_frame = 'week'; // will be default
-  const return_json = {};
 
   let page = 1;
 
@@ -40,7 +36,7 @@ function getEvents(params, callback) {
   
 
   if (time_frame === 'week') {
-    time_frame_calculated = Date.parse(new Date(new Date().getTime() - (60*60*24*7*1000)));
+    time_frame_calculated = Date.parse(new Date(new Date().getTime() - (60*60*24*10*1000))); // CHANGE BACK 
     //console.log(`The date a week ago was ${time_frame_calculated}`);
   } else {
     time_frame_calculated = Date.parse(new Date(new Date().getTime() - (60*60*24*1000)));
@@ -62,7 +58,7 @@ function getEvents(params, callback) {
       .forEach(event => {
         const createdAt = Date.parse(event.created_at);
         if (createdAt >= time_frame_calculated) {
-          result = includeEvent(event_types, event);
+          result = includeEvent(event);
           include = result.include;
           info = result.info;
           // if this is an event we want to include
@@ -99,15 +95,13 @@ getEvents(null, (err, events) => {
   }
 });
 
-// will take event_types and event and return boolean include and additional_info
-/**
- * CorrectType
- */
-function includeEvent(params,event) {
-  const show_commits = true // false will be default
+// will take event and return boolean include and {additional_info}
+function includeEvent(event) {
 
-  // console.log(event.type);
+  //console.log(`current event being checked is ${event.type}`);
+
   switch (event.type) {
+
     // Pull request parsing
     case ('PullRequestEvent'):
       switch (event.payload.action) {
@@ -162,7 +156,7 @@ function includeEvent(params,event) {
             type: 'PR',
             action: 'commented on',
             repo: event.repo.name,
-            title: event.payload.pull_request.title,  // these feilds may be incorrect **double check**
+            title: event.payload.pull_request.title,
             number: event.payload.pull_request.number,
             link: event.payload.pull_request.html_url
           }
@@ -170,11 +164,10 @@ function includeEvent(params,event) {
       } else {
         return {include: false, info: null};
       }
+
     // Commit parsing
-    // will get a maximum of 20 commits in a single PushEvent (api limit)
     case ('PushEvent'):
-    // change this all to reflect that this is a push (group of commits) rather than a 'commit'
-      push_event_info = {
+      return {
         include: true,
         info: {
           type: 'Commits',
@@ -185,10 +178,6 @@ function includeEvent(params,event) {
           date: event.created_at,
         }
       };
-      if (show_commits) {
-        push_event_info.info.commits = event.payload.commits;
-      }
-      return push_event_info;
     //Issue parsing
     case('IssuesEvent'):
       return {
@@ -202,24 +191,23 @@ function includeEvent(params,event) {
           link: event.payload.issue.html_url
         }
       };
-
+    // return {include: false, info: null} for all the events we don't care about
     default:
-      return {include: false, info: null};
-    
+      return {include: false, info: null}; 
   }
 }
 
-// will take all included events and sort them into repos in a human readable mannor
+// takes all events that were included by includeEvent() and sorts them by repos. returns sorted_events json
 function sort(events) {
   let sorted_events = {};
 
   events.forEach(event => {
+    // add this repo if we don't have it listed in sorted_events yet
     if (!sorted_events[event.repo]){
-      // console.log(`${event.repo} doesn't exist yet, creating it!`);
       sorted_events[event.repo] = {
         issues: [],
         prs: [],
-        commits: []
+        commits: {}
       }
     }
     if (sorted_events[event.repo]) {
@@ -228,7 +216,13 @@ function sort(events) {
       } else if (event.type === 'PR') {
         sorted_events[event.repo].prs.push(event);
       } else if (event.type === 'Commits') {
-        sorted_events[event.repo].commits.push(event);
+        // check if this ref exists in this commits obj
+        if (sorted_events[event.repo].commits[event.ref]){
+          sorted_events[event.repo].commits[event.ref] = sorted_events[event.repo].commits[event.ref] + event.size
+        } else {
+          sorted_events[event.repo].commits[event.ref] = event.size
+        }
+        //sorted_events[event.repo].commits.push(event);
       }
     }
   });
@@ -236,12 +230,13 @@ function sort(events) {
   return sorted_events;
 }
 
+// will be called only for the CLI
 function print_sorted_events(sorted_events) {
   
-  for(var repo in sorted_events) {
+  for (var repo in sorted_events) {
     console.log('');
     console.log(repo);
-    if(sorted_events[repo].issues.length > 0) {
+    if (sorted_events[repo].issues.length > 0) {
       console.log('   Issues:')
       sorted_events[repo].issues.forEach(issue => {
         console.log(`      ${issue.action} Issue ${issue.number}: ${issue.link}`);
@@ -253,11 +248,13 @@ function print_sorted_events(sorted_events) {
         console.log(`      ${pr.action} ${pr.title} (${pr.number}): ${pr.link}`);
       });
     }
-    if (sorted_events[repo].commits.length > 0) {
+    // check to see if there were any commits in this repo
+    if (Object.keys(sorted_events[repo].commits).length > 0) {
       console.log('   Commits:');
-      sorted_events[repo].commits.forEach(commits => {
-        console.log(`      ${commits.action} ${commits.size} commits to ${commits.ref}`);
-      });
+    }
+    // print out commit info for every ref that's in the commit info section of this repo
+    for (var ref in sorted_events[repo].commits) {
+      console.log(`      pushed ${sorted_events[repo].commits[ref]} commits to ${ref}`);
     }
   }
 }
