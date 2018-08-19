@@ -1,0 +1,22 @@
+language: node_js
+sudo: false # causes tests to be run in Travis CI's newer, faster build infrastructure
+node_js: 8
+
+cache:
+  directories:
+    - node_modules
+
+install:
+  - npm install
+  - npm install semantic-release@13.1.1
+
+script:
+  - npm test
+
+after_success:
+  - npm run coveralls
+
+# deploy:
+#   - provider: script
+#     skip_cleanup: true
+#     script: npx semantic-release
