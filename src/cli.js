@@ -2,7 +2,9 @@
 
 const Configstore = require('configstore');
 const program = require('commander');
+const os = require('os');
 
+const github = require('./github');
 const pkg = require('../package.json');
 const inquirer = require('./inquirer');
 const configStore = new Configstore(pkg.name, {
@@ -28,9 +30,17 @@ if (program.init) {
   inquirer.prompt()
     .then((answers) => {
       console.log('Saving options into the configuration file');
-      console.log(JSON.stringify(answers, null, 2));
       Object.keys(answers).forEach(k => configStore.set(k, answers[k]));
+      answers.token = 'hidden';
+      console.log(JSON.stringify(answers, null, 2));
     });
 } else {
-  console.log('Add support for calling github.js here');
+  const config = require(`${os.homedir()}/.config/configstore/standup-helper.json`);
+  let getActivity = github(config).getActivity();
+  getActivity.then(function(results) {
+    console.log(results);
+  });
+  getActivity.catch(function(error) {
+    console.log(`there was an error while trying to get events: ${error}`);
+  });
 }

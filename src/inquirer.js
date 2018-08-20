@@ -31,7 +31,7 @@ const questions = [{
 {
   type: 'input',
   name: 'hours',
-  message: 'Enter the timeframe:',
+  message: 'Enter the timeframe (default 1 day):',
   default: '1d',
   filter: function(value) {
     return timestring(value || '1d', 'h');

@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const Chalk = require('chalk');
 
 /**
  * Returns a promise that resolves with the Github events for a given user
@@ -25,7 +26,7 @@ function getEvents(params) {
     let page = 1;
 
     // adjust last created at based on the user provided hours;
-    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours);
+    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours); // ? 
 
 
     const processEvents = (error, result) => {
@@ -196,18 +197,18 @@ function toString(eventsByRepository) {
   for (const repository in eventsByRepository) {
     const events = eventsByRepository[repository];
     ret += '\n';
-    ret += repository + '\n';
+    ret += Chalk.underline(repository) + '\n\n';
     if (events.issues.length > 0) {
-      ret += '\tIssues\n';
+      ret += Chalk.bgRed('\tIssues\n');
       ret += events.issues.map(e => `\t\t${e.action} Issue ${e.number}: ${e.link}\n`);
     }
     if (events.prs.length > 0) {
-      ret += '\tPull Requests\n';
+      ret += Chalk.inverse('\tPull Requests\n');
       ret += events.prs.map(e => `\t\t${e.action} ${e.title} (${e.number}): ${e.link}\n`);
     }
     // check to see if there were any commits in this repository
     if (Object.keys(events.commits).length > 0) {
-      ret += '\tCommits\n';
+      ret += Chalk.bgBlue('\tCommits\n');
     }
     // print out commit info for every ref that's in the commit info section of this repository
     for (var ref in events.commits) {
@@ -220,11 +221,12 @@ function toString(eventsByRepository) {
 
 module.exports = (params = {}) => {
   const schema = Joi.object().keys({
-    username: Joi.string().alphanum().min(1).max(30).required(),
-    password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/),
+    username: Joi.string().replace('-','_').token().min(1).max(30).required(), // .token() requires the string be alphanumeric or an underscore. github currently allows usernames with alphanumberics and hyphens
+    password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/), // ? why do we need password?
     token: Joi.string().required(),
     url: Joi.string().required(),
-    hours: Joi.number().integer().min(1).max(168).required() // max 1 week = 168 hours
+    hours: Joi.number().integer().min(1).max(168).required(), // max 1 week = 168 hours
+    is_enterprise: Joi.boolean().required()
   });
   Joi.assert(params, schema);
 
