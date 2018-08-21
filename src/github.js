@@ -117,6 +117,7 @@ function includeEvent(event) {
       return {
         type: 'PR',
         action: 'commented on',
+        numTimes: 1,
         repo: event.repo.name,
         title: event.payload.pull_request.title,
         number: event.payload.pull_request.number,
@@ -154,7 +155,7 @@ function includeEvent(event) {
 
 /**
  * Sorts events by repository.
- * @param {Array[object]} events - A list of Github event.
+ * @param {Array[object]} events - A list of Github events.
  */
 function sortEventsByRepository(events) {
   const repositories = {};
@@ -174,7 +175,17 @@ function sortEventsByRepository(events) {
     if(event.type === 'Issue') {
       repository.issues.push(event);
     } else if (event.type === 'PR') {
-      repository.prs.push(event);
+      if (event.action === 'commented on') {
+        // incrementing the number of times a pr has been commented on if another comment already exists
+        let commentEvent = repository.prs.find( prEvent => prEvent.action === 'commented on' && prEvent.title === event.title);
+        if (commentEvent) {
+          commentEvent.numTimes++;
+        } else {
+          repository.prs.push(event);
+        }
+      } else {
+        repository.prs.push(event);
+      }
     } else if (event.type === 'Commits') {
       // check if this ref exists in this commits obj
       if (repository.commits[event.ref]) {
@@ -190,7 +201,7 @@ function sortEventsByRepository(events) {
 
 /**
  * Returns the string representation of the Github events.
- * @param {Array[object]} eventsByRepository - A list of Github event.
+ * @param {Array[object]} eventsByRepository - A list of Github events.
  */
 function toString(eventsByRepository) {
   let ret = '';
@@ -199,16 +210,27 @@ function toString(eventsByRepository) {
     ret += '\n';
     ret += Chalk.underline(repository) + '\n\n';
     if (events.issues.length > 0) {
-      ret += Chalk.bgRed('\tIssues\n');
+      ret += '\t'+Chalk.bgRed('Issues\n');
       ret += events.issues.map(e => `\t\t${e.action} Issue ${e.number}: ${e.link}\n`);
     }
     if (events.prs.length > 0) {
-      ret += Chalk.inverse('\tPull Requests\n');
-      ret += events.prs.map(e => `\t\t${e.action} ${e.title} (${e.number}): ${e.link}\n`);
+      ret += '\t'+Chalk.inverse('Pull Requests\n');
+      ret += events.prs.map(e => {
+        // will add the correct `commented on` phrasing if there is a single comment or multiple comments
+        if (e.action === 'commented on'){
+          if (e.numTimes > 1) {
+            return `\t\tmade ${e.numTimes} comments on ${e.title} (${e.number}): ${e.link}\n`;
+          } else {
+            return `\t\tcomment on ${e.title} (${e.number}): ${e.link}\n`;
+          }
+        } else {
+          return `\t\t${e.action} ${e.title} (${e.number}): ${e.link}\n`;
+        }
+      });
     }
     // check to see if there were any commits in this repository
     if (Object.keys(events.commits).length > 0) {
-      ret += Chalk.bgBlue('\tCommits\n');
+      ret += '\t'+Chalk.bgBlue('Commits\n');
     }
     // print out commit info for every ref that's in the commit info section of this repository
     for (var ref in events.commits) {

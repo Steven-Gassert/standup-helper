@@ -2,7 +2,6 @@
 
 const Configstore = require('configstore');
 const program = require('commander');
-const os = require('os');
 
 const github = require('./github');
 const pkg = require('../package.json');
@@ -35,7 +34,7 @@ if (program.init) {
       console.log(JSON.stringify(answers, null, 2));
     });
 } else {
-  const config = require(`${os.homedir()}/.config/configstore/standup-helper.json`);
+  const config = configStore.all;
   let getActivity = github(config).getActivity();
   getActivity.then(function(results) {
     console.log(results);
