@@ -12,7 +12,8 @@
     "test": "jest tests",
     "coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls",
     "lint": "eslint .",
-    "autofix": "eslint --fix ."
+    "autofix": "eslint --fix .",
+    "test": "jest"
   },
   "author": "Steven Gassert",
   "license": "MIT",
