@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-
 const Configstore = require('configstore');
 const program = require('commander');
 
-const github = require('./github');
+const callAndFilter = require('./callAndFilter');
+const output = require('./output.js');
 const pkg = require('../package.json');
 const inquirer = require('./inquirer');
 const configStore = new Configstore(pkg.name, {
@@ -35,11 +35,26 @@ if (program.init) {
     });
 } else {
   const config = configStore.all;
-  let getActivity = github(config).getActivity();
-  getActivity.then(function(results) {
-    console.log(results);
-  });
-  getActivity.catch(function(error) {
-    console.log(`there was an error while trying to get events: ${error}`);
-  });
+  // if there are no options specified we will include all types of events.
+  if (!program.issues && !program.pullRequests && !program.commits){
+    config.issues = true;
+    config.pull_requests = true;
+    config.commits = true;
+  } else {
+    config.issues = program.issues || false;
+    config.commits = program.commits || false;
+    config.pull_requests = program.pullRequests || false;
+  }
+
+  async function getActivity() {
+    try{
+      results = await callAndFilter(config).getActivity(); 
+      output.outputCli(results);
+    } catch(error) {
+      console.log(`there was an error attempting to getActivity(): ${error}`);
+    }
+  }
+  getActivity();
+
+  
 }
