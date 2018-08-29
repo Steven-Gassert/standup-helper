@@ -59,9 +59,3 @@ describe('output', () => {
     expect(output.cli(events)).toContain('comment on new(WS): web socket-client library for STT weboscket (540): https://github.com/watson-developer-cloud/python-sdk/pull/540')
   });
 });
-
-describe('test mock', () => {
-  test('should pring out', () => {
-    myfunc = require(`../`)
-  });
-});

@@ -44,7 +44,7 @@ if (program.init) {
     config.commits = program.commits || false;
     config.pull_requests = program.pullRequests || false;
   }
-
+  
   github(config).getActivity()
     .then(results => {
       //console.log(JSON.stringify(results));

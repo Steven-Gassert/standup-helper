@@ -1,3 +1,5 @@
 node_modules
 vscode
 coverage
+.vscode
+.DS_Store

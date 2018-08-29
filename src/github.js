@@ -30,7 +30,7 @@ function getEvents(params) {
     };
 
     // adjust last created at based on the user provided hours;
-    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours); // ? 
+    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours); 
 
 
     const processEvents = (error, result) => {
@@ -201,6 +201,7 @@ function sortEventsByRepository(events) {
       }
     });
   } catch(error) {
+    console.log('there was an error in sort events by repository');
     return repositories;
   }
   return repositories;
@@ -210,7 +211,7 @@ function sortEventsByRepository(events) {
 
 module.exports = (params = {}) => {
   const schema = Joi.object().keys({
-    username: Joi.string().replace('-', '_').token().min(1).max(30).required(), // .token() requires the string be alphanumeric or an underscore. github currently allows usernames with alphanumberics and hyphens
+    username: Joi.string().replace('-', '_').token().min(1).max(30).required(),
     token: Joi.string().required(),
     url: Joi.string().required(),
     hours: Joi.number().integer().min(1).max(168).required(), // max 1 week = 168 hours

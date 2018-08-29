@@ -1,5 +1,5 @@
 const github = require('../src/github');
-const eventStubs = require('./eventStubs');
+const eventStubs = require('./resources/events');
 describe('github no params should return an error', function () {
   test('Should throw an error if no parameters are specified', () => {
     expect(() => {

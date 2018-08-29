@@ -86,34 +86,34 @@ function github(sortedEvents) {
  * Returns the string representation of the Github events.
  * @param {Array[object]} sortedEvents - A list of Github events.
  */
-function slack (sortedEvents) {
+function slack(sortedEvents) {
   let ret = '';
   for (const repository in sortedEvents) {
     const events = sortedEvents[repository];
     ret += '\n';
-    ret += Chalk.underline(repository) + '</br>';
+    ret += repository + '\n';
     if (events.issues.length > 0) {
-      ret += '\t'+Chalk.bgRed('Issues</br>');
-      ret += events.issues.map(e => `\t\t${e.action} Issue ${e.number}: ${e.link}</br>`);
+      ret += '\tIssues\n';
+      ret += events.issues.map(e => `\t\t${e.action} Issue ${e.number}: ${e.link}\n`);
     }
     if (events.prs.length > 0) {
-      ret += '\t'+Chalk.inverse('Pull Requests</br>');
+      ret += '\tPull Requests\n';
       ret += events.prs.map(e => {
         // will add the correct `commented on` phrasing if there is a single comment or multiple comments
         if (e.action === 'commented on'){
           if (e.numTimes > 1) {
-            return `\t\tmade ${e.numTimes} comments on ${e.title} (${e.number}): ${e.link}</br>`;
+            return `\t\tmade ${e.numTimes} comments on ${e.title} (${e.number}): ${e.link}\n`;
           } else {
-            return `\t\tcomment on ${e.title} (${e.number}): ${e.link}</br>`;
+            return `\t\tcomment on ${e.title} (${e.number}): ${e.link}\n`;
           }
         } else {
-          return `\t\t${e.action} ${e.title} (${e.number}): ${e.link}</br>`;
+          return `\t\t${e.action} ${e.title} (${e.number}): ${e.link}\n`;
         }
       });
     }
     // check to see if there were any commits in this repository
     if (Object.keys(events.commits).length > 0) {
-      ret += '\t'+Chalk.bgBlue('Commits</br>');
+      ret += '\tCommits\n';
     }
     // print out commit info for every ref that's in the commit info section of this repository
     for (var ref in events.commits) {
