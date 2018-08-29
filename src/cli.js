@@ -17,7 +17,7 @@ program
   .option('-c, --commits', 'Include commits')
   .option('-t, --timeframe', 'The timeframe in hours')
   .option('-g, --github-url [url]', 'The GitHub URL', 'https://api.github.com')
-  .option('-a, --access-token [access_token]', 'The GitHub access token')
+  .option('-a, --token [token]', 'The GitHub access token')
   .parse(process.argv);
 
 program.parse(process.argv);
