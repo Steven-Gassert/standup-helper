@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 const Configstore = require('configstore');
 const program = require('commander');
-
-const callAndFilter = require('./callAndFilter');
-const output = require('./output.js');
 const pkg = require('../package.json');
+const github = require('./github');
+const output = require('./output');
 const inquirer = require('./inquirer');
 const configStore = new Configstore(pkg.name, {
   url: 'https://api.github.com',
@@ -46,15 +45,12 @@ if (program.init) {
     config.pull_requests = program.pullRequests || false;
   }
 
-  async function getActivity() {
-    try{
-      results = await callAndFilter(config).getActivity(); 
-      output.outputCli(results);
-    } catch(error) {
-      console.log(`there was an error attempting to getActivity(): ${error}`);
-    }
-  }
-  getActivity();
-
-  
+  github(config).getActivity()
+    .then(results => {
+      //console.log(JSON.stringify(results));
+      const cliMessage = output.cli(results);
+      console.log(cliMessage);
+    })
+    .catch(error => console.error(error));
 }
+
