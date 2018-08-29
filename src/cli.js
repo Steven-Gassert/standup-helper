@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-
 const Configstore = require('configstore');
 const program = require('commander');
-
 const pkg = require('../package.json');
+const github = require('./github');
+const output = require('./output');
 const inquirer = require('./inquirer');
 const configStore = new Configstore(pkg.name, {
   url: 'https://api.github.com',
@@ -28,9 +28,29 @@ if (program.init) {
   inquirer.prompt()
     .then((answers) => {
       console.log('Saving options into the configuration file');
-      console.log(JSON.stringify(answers, null, 2));
       Object.keys(answers).forEach(k => configStore.set(k, answers[k]));
+      answers.token = 'hidden';
+      console.log(JSON.stringify(answers, null, 2));
     });
 } else {
-  console.log('Add support for calling github.js here');
+  const config = configStore.all;
+  // if there are no options specified we will include all types of events.
+  if (!program.issues && !program.pullRequests && !program.commits){
+    config.issues = true;
+    config.pull_requests = true;
+    config.commits = true;
+  } else {
+    config.issues = program.issues || false;
+    config.commits = program.commits || false;
+    config.pull_requests = program.pullRequests || false;
+  }
+  
+  github(config).getActivity()
+    .then(results => {
+      //console.log(JSON.stringify(results));
+      const cliMessage = output.cli(results);
+      console.log(cliMessage);
+    })
+    .catch(error => console.error(error));
 }
+

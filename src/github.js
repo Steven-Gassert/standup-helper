@@ -23,9 +23,14 @@ function getEvents(params) {
     const username = params.username;
     const lastCreatedAt = new Date();
     let page = 1;
+    var eventOptions = {
+      issues: params.issues,
+      pull_requests: params.pull_requests,
+      commits: params.commits
+    };
 
     // adjust last created at based on the user provided hours;
-    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours);
+    lastCreatedAt.setHours(lastCreatedAt.getHours() - params.hours); 
 
 
     const processEvents = (error, result) => {
@@ -41,7 +46,7 @@ function getEvents(params) {
         .forEach(event => {
           const createdAt = Date.parse(event.created_at);
           if (createdAt >= lastCreatedAt) {
-            const evt = includeEvent(event);
+            const evt = includeEvent(event, eventOptions);
             // if this is an event we want to include then `evt` won't be null
             if (evt) {
               events.push(evt);
@@ -53,53 +58,76 @@ function getEvents(params) {
 
       if (keepSearching) {
         page++;
-        octokit.activity.getEventsForUser({ username, per_page, page }, processEvents);
+        octokit.activity.getEventsForUser({
+          username,
+          per_page,
+          page
+        }, processEvents);
       } else {
         resolve(events);
       }
     };
-    octokit.activity.getEventsForUser({ username, per_page, page }, processEvents);
+    octokit.activity.getEventsForUser({
+      username,
+      per_page,
+      page
+    }, processEvents);
   });
 }
 
 getEvents;
 
 /**
- * Returns true if the even should be included in the response.
+ * Returns true if the event should be included in the response.
  * @param {Object} event - The Github event.
  * @returns {boolean} true if the event will be included in the response
  */
-function includeEvent(event) {
+function includeEvent(event, eventOptions) { // is there a better way to do this without passing in params each time?
   if (!event || !event.type) {
     return false;
-  }
-  switch (event.type) {
-  // Pull request parsing
-  case ('PullRequestEvent'):
-    switch (event.payload.action) {
-    case ('opened'):
-      return {
-        type: 'PR',
-        action: 'opened',
-        repo: event.repo.name,
-        title: event.payload.pull_request.title,
-        number: event.payload.pull_request.number,
-        link: event.payload.pull_request.html_url
-      };
-    case ('reopened'):
-      return {
-        type: 'PR',
-        action: 're-opened',
-        repo: event.repo.name,
-        title: event.payload.pull_request.title,
-        number: event.payload.pull_request.number,
-        link: event.payload.pull_request.html_url
-      };
-    case ('closed'):
-      if (event.payload.pull_request.merged) {
+  } else {
+    if (event.type === 'PullRequestEvent' && eventOptions.pull_requests) {
+      switch (event.payload.action) {
+      case ('opened'):
         return {
           type: 'PR',
-          action: 'merged',
+          action: 'opened',
+          repo: event.repo.name,
+          title: event.payload.pull_request.title,
+          number: event.payload.pull_request.number,
+          link: event.payload.pull_request.html_url
+        };
+      case ('reopened'):
+        return {
+          type: 'PR',
+          action: 're-opened',
+          repo: event.repo.name,
+          title: event.payload.pull_request.title,
+          number: event.payload.pull_request.number,
+          link: event.payload.pull_request.html_url
+        };
+      case ('closed'):
+        if (event.payload.pull_request.merged) {
+          return {
+            type: 'PR',
+            action: 'merged',
+            repo: event.repo.name,
+            title: event.payload.pull_request.title,
+            number: event.payload.pull_request.number,
+            link: event.payload.pull_request.html_url
+          };
+        } else {
+          return null;
+        }
+      default:
+        return null;
+      }
+    } else if (event.type === 'PullRequestReviewCommentEvent' && eventOptions.pull_requests) {
+      if (event.payload.action === 'created') {
+        return {
+          type: 'PR',
+          action: 'commented on',
+          numTimes: 1,
           repo: event.repo.name,
           title: event.payload.pull_request.title,
           number: event.payload.pull_request.number,
@@ -108,131 +136,98 @@ function includeEvent(event) {
       } else {
         return null;
       }
-    default:
-      return null;
-    }
-  case ('PullRequestReviewCommentEvent'):
-    if (event.payload.action === 'created') {
+    } else if (event.type === 'PushEvent' && eventOptions.commits) {
       return {
-        type: 'PR',
-        action: 'commented on',
+        type: 'Commits',
+        action: 'pushed',
         repo: event.repo.name,
-        title: event.payload.pull_request.title,
-        number: event.payload.pull_request.number,
-        link: event.payload.pull_request.html_url
+        ref: event.payload.ref,
+        size: event.payload.distinct_size, // size vs distinct size?
+        date: event.created_at,
       };
-    } else {
-      return null;
+    } else if (event.type === 'IssuesEvent' && eventOptions.issues) {
+      return {
+        type: 'Issue',
+        action: event.payload.action,
+        repo: event.repo.name,
+        title: event.payload.issue.title,
+        number: event.payload.issue.number,
+        link: event.payload.issue.html_url
+      };
     }
-
-  // Commit parsing
-  case ('PushEvent'):
-    return {
-      type: 'Commits',
-      action: 'pushed',
-      repo: event.repo.name,
-      ref: event.payload.ref,
-      size: event.payload.distinct_size, // size vs distinct size?
-      date: event.created_at,
-    };
-  //Issue parsing
-  case('IssuesEvent'):
-    return {
-      type: 'Issue',
-      action: event.payload.action,
-      repo: event.repo.name,
-      title: event.payload.issue.title,
-      number: event.payload.issue.number,
-      link: event.payload.issue.html_url
-    };
-  // return {include: false, info: null} for all the events we don't care about
-  default:
-    return null;
   }
 }
 
 /**
  * Sorts events by repository.
- * @param {Array[object]} events - A list of Github event.
+ * @param {Array[object]} events - A list of Github events.
  */
 function sortEventsByRepository(events) {
   const repositories = {};
-
-  events.forEach(event => {
-    // Add this repo if we don't have it listed in repositories yet
-    if (!repositories[event.repo]) {
-      repositories[event.repo] = {
-        issues: [],
-        prs: [],
-        commits: {}
-      };
-    }
-
-    const repository = repositories[event.repo];
-
-    if(event.type === 'Issue') {
-      repository.issues.push(event);
-    } else if (event.type === 'PR') {
-      repository.prs.push(event);
-    } else if (event.type === 'Commits') {
-      // check if this ref exists in this commits obj
-      if (repository.commits[event.ref]) {
-        repository.commits[event.ref] = repository.commits[event.ref] + event.size;
-      } else {
-        repository.commits[event.ref] = event.size;
+  try{
+    events.forEach(event => {
+      // Add this repo if we don't have it listed in repositories yet
+      if (!repositories[event.repo]) {
+        repositories[event.repo] = {
+          issues: [],
+          prs: [],
+          commits: {}
+        };
       }
-    }
-  });
-
+  
+      const repository = repositories[event.repo];
+  
+      if (event.type === 'Issue') {
+        repository.issues.push(event);
+      } else if (event.type === 'PR') {
+        if (event.action === 'commented on') {
+          // incrementing the number of times a pr has been commented on if another comment already exists
+          let commentEvent = repository.prs.find(prEvent => prEvent.action === 'commented on' && prEvent.title === event.title);
+          if (commentEvent) {
+            commentEvent.numTimes++;
+          } else {
+            repository.prs.push(event);
+          }
+        } else {
+          repository.prs.push(event);
+        }
+      } else if (event.type === 'Commits') {
+        // check if this ref exists in this commits obj
+        if (repository.commits[event.ref]) {
+          repository.commits[event.ref] = repository.commits[event.ref] + event.size;
+        } else {
+          repository.commits[event.ref] = event.size;
+        }
+      }
+    });
+  } catch(error) {
+    console.log('there was an error in sort events by repository');
+    return repositories;
+  }
   return repositories;
 }
 
-/**
- * Returns the string representation of the Github events.
- * @param {Array[object]} eventsByRepository - A list of Github event.
- */
-function toString(eventsByRepository) {
-  let ret = '';
-  for (const repository in eventsByRepository) {
-    const events = eventsByRepository[repository];
-    ret += '\n';
-    ret += repository + '\n';
-    if (events.issues.length > 0) {
-      ret += '\tIssues\n';
-      ret += events.issues.map(e => `\t\t${e.action} Issue ${e.number}: ${e.link}\n`);
-    }
-    if (events.prs.length > 0) {
-      ret += '\tPull Requests\n';
-      ret += events.prs.map(e => `\t\t${e.action} ${e.title} (${e.number}): ${e.link}\n`);
-    }
-    // check to see if there were any commits in this repository
-    if (Object.keys(events.commits).length > 0) {
-      ret += '\tCommits\n';
-    }
-    // print out commit info for every ref that's in the commit info section of this repository
-    for (var ref in events.commits) {
-      ret += `\t\tpushed ${events.commits[ref]} commits to ${ref}\n`;
-    }
-  }
-  return ret;
-}
 
 
 module.exports = (params = {}) => {
   const schema = Joi.object().keys({
-    username: Joi.string().alphanum().min(1).max(30).required(),
-    password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/),
+    username: Joi.string().replace('-', '_').token().min(1).max(30).required(),
     token: Joi.string().required(),
     url: Joi.string().required(),
-    hours: Joi.number().integer().min(1).max(168).required() // max 1 week = 168 hours
+    hours: Joi.number().integer().min(1).max(168).required(), // max 1 week = 168 hours
+    is_enterprise: Joi.boolean().required(),
+    issues: Joi.boolean(),
+    pull_requests: Joi.boolean(),
+    commits: Joi.boolean()
   });
   Joi.assert(params, schema);
 
   return {
     getActivity: () => getEvents(params).then((events) => {
       const sortedEvents = sortEventsByRepository(events);
-      const output = toString(sortedEvents);
-      return Promise.resolve(output);
-    })
+      return Promise.resolve(sortedEvents);
+    }),
+    includeEvent: includeEvent,
+    sortEventsByRepository: sortEventsByRepository
   };
 };
