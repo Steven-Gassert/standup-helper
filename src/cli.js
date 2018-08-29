@@ -5,9 +5,14 @@ const pkg = require('../package.json');
 const github = require('./github');
 const output = require('./output');
 const inquirer = require('./inquirer');
+const updateNotifier = require('update-notifier');
+ 
+updateNotifier({pkg}).notify();
+
 const configStore = new Configstore(pkg.name, {
   url: 'https://api.github.com',
 });
+
 
 program
   .version(pkg.version, '-v, --version')

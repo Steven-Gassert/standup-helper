@@ -32,6 +32,7 @@
     "configstore": "^4.0.0",
     "inquirer": "^6.2.0",
     "joi": "^13.6.0",
-    "timestring": "^5.0.1"
+    "timestring": "^5.0.1",
+    "update-notifier": "^2.5.0"
   }
 }
