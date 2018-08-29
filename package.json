@@ -1,6 +1,6 @@
 {
   "name": "standup-helper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Pulls various information from github to help a developer in creating a standup update.",
   "main": "src/github.js",
   "bin": {
