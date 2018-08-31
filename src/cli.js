@@ -5,9 +5,14 @@ const pkg = require('../package.json');
 const github = require('./github');
 const output = require('./output');
 const inquirer = require('./inquirer');
+const updateNotifier = require('update-notifier');
+ 
+updateNotifier({pkg}).notify();
+
 const configStore = new Configstore(pkg.name, {
   url: 'https://api.github.com',
 });
+
 
 program
   .version(pkg.version, '-v, --version')
@@ -15,7 +20,7 @@ program
   .option('-i, --issues', 'Include issues')
   .option('-p, --pull-requests', 'Include pull requests')
   .option('-c, --commits', 'Include commits')
-  .option('-t, --timeframe', 'The timeframe in hours')
+  .option('-t, --time-frame [time]', 'The timeframe in hours')
   .option('-g, --github-url [url]', 'The GitHub URL', 'https://api.github.com')
   .option('-a, --token [token]', 'The GitHub access token')
   .parse(process.argv);
@@ -44,7 +49,10 @@ if (program.init) {
     config.commits = program.commits || false;
     config.pull_requests = program.pullRequests || false;
   }
-  
+  config.hours = program.timeFrame || config.hours;
+  config.url = program.githubUrl || config.url;
+  config.token = program.token || config.token;
+
   github(config).getActivity()
     .then(results => {
       //console.log(JSON.stringify(results));
@@ -53,4 +61,5 @@ if (program.init) {
     })
     .catch(error => console.error(error));
 }
+
 
