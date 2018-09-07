@@ -3,22 +3,22 @@ const timestring = require('timestring');
 
 const questions = [{
   type: 'confirm',
-  name: 'is_enterprise',
-  message: 'Do you want to use Github Enterprise?'
+  name: 'use_enterprise',
+  message: 'Do you want to create standups for a Github Enterprise username?'
 },
 {
   type: 'input',
-  name: 'url',
-  message: 'Enter the GitHub URL',
-  default: 'https://api.github.com',
+  name: 'enterprise_url',
+  message: 'Enter your enterprise url',
+  default: 'https://api.ibm.github.com',
   when: function (answers) {
-    return answers.is_enterprise;
+    return answers.use_enterprise;
   }
 },
 {
-  type: 'password',
-  name: 'token',
-  message: 'Enter the GitHub access token:',
+  type: 'input',
+  name: 'enterprise_un',
+  message: 'Github enterprise username:',
   validate: function (username) {
     if (username)
       var pass = username.match(/^[a-zA-Z0-9_-]+$/);
@@ -26,6 +26,66 @@ const questions = [{
       return true;
     }
     return 'Please enter a valid username';
+  },
+  when: function (answers) {
+    return answers.use_enterprise;
+  }
+
+},
+{
+  type: 'password',
+  name: 'enterprise_token',
+  message: 'Enter the GitHub enterprise access token:',
+  validate: function (token) {
+    if (token)
+      var pass = token.match(/^[a-zA-Z0-9_-]+$/);
+    if (pass) {
+      return true;
+    }
+    return 'Please enter a valid token';
+  },
+  when: function (answers) {
+    return answers.use_enterprise;
+  }
+},
+{
+  type: 'confirm',
+  name: 'use_public',
+  message: 'Do you want to create standups for a Github public username?',
+  when: function (answers) {
+    return answers.use_enterprise;
+  }
+},
+{
+  type: 'input',
+  name: 'public_un',
+  message: 'public Github username:',
+  validate: function (username) {
+    if (username)
+      var pass = username.match(/^[a-zA-Z0-9_-]+$/);
+    if (pass) {
+      return true;
+    }
+    return 'Please enter a valid username';
+  },
+  when: function (answers) {
+    return answers.use_public || !answers.use_enterprise;
+  }
+},
+{
+  type: 'password',
+  name: 'public_token',
+  message: 'public GitHub access token:',
+  validate: function (token) {
+    if (token)
+      var pass = token.match(/^[a-zA-Z0-9_-]+$/);
+    if (pass) {
+      return true;
+    }
+    return 'Please enter a valid token';
+  },
+  when: function (answers) {
+    return answers.use_public || !answers.use_enterprise;
   }
 },
 {
@@ -40,22 +100,8 @@ const questions = [{
     if (value > 0 && value < 169) {
       return true;
     }
-    return 'Please enter a time frame lower than a week';
+    return 'Please enter a time frame lower than one week';
   }
-},
-{
-  type: 'input',
-  name: 'username',
-  message: 'Github username:',
-  validate: function (username) {
-    if (username)
-      var pass = username.match(/^[a-zA-Z0-9_-]+$/);
-    if (pass) {
-      return true;
-    }
-    return 'Please enter a valid username';
-  }
-},
-];
+}];
 
 module.exports.prompt = () => inquirer.prompt(questions);
