@@ -10,7 +10,7 @@ const questions = [{
   type: 'input',
   name: 'enterprise_url',
   message: 'Enter your enterprise url',
-  default: 'https://api.ibm.github.com',
+  default: 'https://api.github.ibm.com',
   when: function (answers) {
     return answers.use_enterprise;
   }

@@ -6,7 +6,6 @@ const github = require('./github');
 const output = require('./output');
 const inquirer = require('./inquirer');
 const updateNotifier = require('update-notifier');
-const fs = require('fs')
 
  
 updateNotifier({pkg}).notify();
@@ -18,14 +17,14 @@ const configStore = new Configstore(pkg.name, {
 
 program
   .option('--init', `Initialize ${pkg.name}`)
-  .option('-e, --github-enterprise', 'use enterprise Github URL')
-  .option('-g, --github-public','use public Github URL')
+  .option('-e, --github-enterprise', 'Use enterprise Github URL')
+  .option('-g, --github-public','Use public Github URL')
   .option('-t, --time-frame [time]', 'The timeframe in hours')
   .option('-i, --issues', 'Include issues')
   .option('-p, --pull-requests', 'Include pull requests')
   .option('-c, --commits', 'Include commits')
   .option('-a, --token [token]', 'The GitHub access token')
-  .option('-s, --save', 'overwrite your configurations with the current command line arguments')
+  .option('-s, --save', 'Overwrite your configurations with the current command line arguments')
   .version(pkg.version, '-v, --version')
   .parse(process.argv);
 
@@ -50,7 +49,7 @@ if (program.init) {
   } 
 
   const config = configStore.all;
-  const settings = '';
+
   // if there are no options specified we will include all types of events.
   if (!program.issues && !program.pullRequests && !program.commits) {
     config.issues = true;
@@ -62,7 +61,7 @@ if (program.init) {
     config.pull_requests = program.pullRequests || false;
   }
   // if neither public or enterprise is set, we will include any url that is provided/saved.
-  if(!program.useEnterprise && !program.usePublic) {
+  if (!program.useEnterprise && !program.usePublic) {
     if (config.public_un)
       config.usePublic = true;
     if (config.enterprise_un)
@@ -98,18 +97,18 @@ if (program.init) {
       .then(results => {
         //console.log(JSON.stringify(results));
         const cliMessage = output.cli(results);
-        console.log('----------Public Git Hub standup----------');
+        console.log('----------Public GitHub standup----------');
         console.log(cliMessage);
       })
       .catch(error => {
-        console.log('----------Public Git Hub standup----------');
+        console.log('----------Public GitHub standup----------');
         console.error(error);
       });
      
   }
   if (config.useEnterprise) {
     let options = {
-      url: config.url,
+      url: config.enterprise_url,
       token: config.enterprise_token,
       hours: config.hours,
       username: config.enterprise_un,
