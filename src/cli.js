@@ -120,11 +120,11 @@ if (program.init) {
       .then(results => {
         //console.log(JSON.stringify(results));
         const cliMessage = output.cli(results);
-        console.log('----------Enterprise Git Hub standup----------');
+        console.log('----------Enterprise GitHub standup----------');
         console.log(cliMessage);
       })
       .catch(error => {
-        console.log('----------Enterprise Git Hub standup----------');
+        console.log('----------Enterprise GitHub standup----------');
         console.error(error);
       });
   }

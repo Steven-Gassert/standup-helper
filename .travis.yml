@@ -12,6 +12,7 @@ install:
 
 script:
   - npm test
+  - eslint .
 
 after_success:
   - npm run coveralls
