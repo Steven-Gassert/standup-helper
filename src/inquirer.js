@@ -20,8 +20,9 @@ const questions = [{
   name: 'enterprise_un',
   message: 'Github enterprise username:',
   validate: function (username) {
+    let pass = false;
     if (username)
-      var pass = username.match(/^[a-zA-Z0-9_-]+$/);
+      pass = username.match(/^[a-zA-Z0-9_-]+$/);
     if (pass) {
       return true;
     }
@@ -37,8 +38,9 @@ const questions = [{
   name: 'enterprise_token',
   message: 'Enter the GitHub enterprise access token:',
   validate: function (token) {
+    let pass = false;
     if (token)
-      var pass = token.match(/^[a-zA-Z0-9_-]+$/);
+      pass = token.match(/^[a-zA-Z0-9_-]+$/);
     if (pass) {
       return true;
     }
@@ -61,8 +63,9 @@ const questions = [{
   name: 'public_un',
   message: 'public Github username:',
   validate: function (username) {
+    let pass = false;
     if (username)
-      var pass = username.match(/^[a-zA-Z0-9_-]+$/);
+      pass = username.match(/^[a-zA-Z0-9_-]+$/);
     if (pass) {
       return true;
     }
@@ -77,8 +80,9 @@ const questions = [{
   name: 'public_token',
   message: 'public GitHub access token:',
   validate: function (token) {
+    let pass = false;
     if (token)
-      var pass = token.match(/^[a-zA-Z0-9_-]+$/);
+      pass = token.match(/^[a-zA-Z0-9_-]+$/);
     if (pass) {
       return true;
     }

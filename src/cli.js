@@ -10,9 +10,7 @@ const updateNotifier = require('update-notifier');
  
 updateNotifier({pkg}).notify();
 
-const configStore = new Configstore(pkg.name, {
-  url: 'https://api.github.com',
-});
+const configStore = new Configstore(pkg.name);
 
 
 program
@@ -77,8 +75,6 @@ if (program.init) {
       throw new Error('You have specified the use of a Pubilc account but have no public username in your config file. Please run `standup-helper --init` again');
     }
   }
-
-
   config.hours = program.timeFrame || config.hours;
   config.token = program.token || config.token;
 
@@ -104,7 +100,6 @@ if (program.init) {
         console.log('----------Public GitHub standup----------');
         console.error(error);
       });
-     
   }
   if (config.useEnterprise) {
     let options = {
