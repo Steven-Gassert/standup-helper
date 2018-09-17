@@ -7,11 +7,9 @@ const output = require('./output');
 const inquirer = require('./inquirer');
 const updateNotifier = require('update-notifier');
 
- 
 updateNotifier({pkg}).notify();
 
 const configStore = new Configstore(pkg.name);
-
 
 program
   .option('--init', `Initialize ${pkg.name}`)

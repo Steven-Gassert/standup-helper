@@ -37,7 +37,7 @@ Example output
 ## Help
 
 ```bash
-$ readme-please --help            # or -h (see all possibles options)
+$ standup-helper --help            # or -h (see all possibles options)
   Usage: cli [options]
 
   Options:
