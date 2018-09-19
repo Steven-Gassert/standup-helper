@@ -11,7 +11,7 @@
 </p>
 </p>
 
-![preview](https://raw.githubusercontent.com/pierrechls/readme-please/master/assets/preview.gif)
+![preview](https://raw.githubusercontent.com/stevengassert94/standup-helper/master/images/standup-app-trimmed.gif)
 
 
 ## Getting Started
