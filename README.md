@@ -21,7 +21,10 @@ You will need to have [Node.js](https://nodejs.org/en/download/) installed.
 ```bash
 $ npm i -g standup-helper
 ```
-
+init standup-helper
+```bash
+$ standup-helper --init
+```
 Print the standup message
 
 ```bash
