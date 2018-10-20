@@ -15,7 +15,6 @@ describe('Include Event parsing', function () {
     commits: true
   };
   let config = {
-    'is_enterprise': false,
     'token': 'fake_key',
     'hours': 24,
     'username': 'username',
@@ -56,7 +55,6 @@ describe('Include Event parsing', function () {
 describe('Sort repository', function () {
   test('calling sortEventsByRepository() with events should return an organized JSON object of events.', () => {
     let config = {
-      'is_enterprise': false,
       'token': 'fake_key',
       'hours': 24,
       'username': 'username',
@@ -70,7 +68,6 @@ describe('Sort repository', function () {
   });
   test('calling sortEventsByRepository() with no events should return an empty dictionary', () => {
     let config = {
-      'is_enterprise': false,
       'token': 'fake_key',
       'hours': 24,
       'username': 'username',

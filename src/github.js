@@ -35,6 +35,7 @@ function getEvents(params) {
 
     const processEvents = (error, result) => {
       if (error) {
+        console.log('there was an error getting your events');
         return reject(error);
       }
       const data = result.data;
@@ -211,11 +212,10 @@ function sortEventsByRepository(events) {
 
 module.exports = (params = {}) => {
   const schema = Joi.object().keys({
-    username: Joi.string().replace('-', '_').token().min(1).max(30).required(),
-    token: Joi.string().required(),
-    url: Joi.string().required(),
+    username: Joi.string().replace('-', '_').token().min(1).max(30),
+    token: Joi.string(),
+    url: Joi.string(),
     hours: Joi.number().integer().min(1).max(168).required(), // max 1 week = 168 hours
-    is_enterprise: Joi.boolean().required(),
     issues: Joi.boolean(),
     pull_requests: Joi.boolean(),
     commits: Joi.boolean()
@@ -227,6 +227,7 @@ module.exports = (params = {}) => {
       const sortedEvents = sortEventsByRepository(events);
       return Promise.resolve(sortedEvents);
     }),
+    // exporting these for unit testing purposes only
     includeEvent: includeEvent,
     sortEventsByRepository: sortEventsByRepository
   };

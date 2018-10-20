@@ -50,12 +50,12 @@ describe('output', () => {
         'commits': {}
       }
     };
-    expect(output.cli(events)).toContain('made 5 comments on cli.js now calls and logs the result of github.js')
-    expect(output.cli(events)).toContain('merged fix: handle RC services in manifest (169): https://github.com/watson-developer-cloud/personality-insights-nodejs/pull/169')
-    expect(output.cli(events)).toContain('pushed 1 commits to refs/heads/master')
-    expect(output.cli(events)).toContain('pushed 1 commits to refs/heads/fix-app-push')
-    expect(output.cli(events)).toContain('watson-developer-cloud/personality-insights-nodejs')
-    expect(output.cli(events)).toContain('watson-developer-cloud/python-sdk')
-    expect(output.cli(events)).toContain('comment on new(WS): web socket-client library for STT weboscket (540): https://github.com/watson-developer-cloud/python-sdk/pull/540')
+    expect(output.cli(events)).toContain('made 5 comments on cli.js now calls and logs the result of github.js');
+    expect(output.cli(events)).toContain('merged fix: handle RC services in manifest (169): https://github.com/watson-developer-cloud/personality-insights-nodejs/pull/169');
+    expect(output.cli(events)).toContain('pushed 1 commits to refs/heads/master');
+    expect(output.cli(events)).toContain('pushed 1 commits to refs/heads/fix-app-push');
+    expect(output.cli(events)).toContain('watson-developer-cloud/personality-insights-nodejs');
+    expect(output.cli(events)).toContain('watson-developer-cloud/python-sdk');
+    expect(output.cli(events)).toContain('comment on new(WS): web socket-client library for STT weboscket (540): https://github.com/watson-developer-cloud/python-sdk/pull/540');
   });
 });
